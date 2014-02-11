@@ -26,7 +26,7 @@ public class Histogram implements Tool {
         String[] rest = new GenericOptionsParser(conf, args).getRemainingArgs();
 
         if (rest.length != 2)
-            throw new RuntimeException("usage: hadoop -jar <...> histogram <input> <output>");
+            usage();
 
         Job job = new Job(conf);
         job.setJobName("histogram");
@@ -48,6 +48,11 @@ public class Histogram implements Tool {
         output.setOutputPath(job, new Path(rest[1]));
 
         return job.waitForCompletion(true) ? 0 : 1;
+    }
+
+    private void usage() {
+        System.err.println("usage: hadoop -jar <...> histogram <input> <output>");
+        System.exit(-1);
     }
 
     @Override
