@@ -1,5 +1,8 @@
 package com.github.kputnam.mapreduce;
 
+import com.github.kputnam.mapreduce.words.Histogram;
+import com.github.kputnam.mapreduce.words.Ngrams;
+import com.github.kputnam.mapreduce.words.WordCount;
 import org.apache.hadoop.util.ToolRunner;
 
 import java.util.Arrays;
@@ -28,7 +31,7 @@ public class Main {
     }
 
     private static void usage() {
-        System.err.println("usage: hadoop -jar <...> <wordcount|ngrams|...> <args...>");
+        System.err.println("usage: hadoop -jar <...> <wordcount|ngrams|histogram|...> <args...>");
         System.exit(-1);
     }
 }

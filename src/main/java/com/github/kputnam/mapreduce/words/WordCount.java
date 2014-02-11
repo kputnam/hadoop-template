@@ -1,4 +1,4 @@
-package com.github.kputnam.mapreduce;
+package com.github.kputnam.mapreduce.words;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;

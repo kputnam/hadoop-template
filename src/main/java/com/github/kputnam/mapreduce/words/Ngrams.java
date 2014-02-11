@@ -1,4 +1,4 @@
-package com.github.kputnam.mapreduce;
+package com.github.kputnam.mapreduce.words;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -8,7 +8,6 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
@@ -17,7 +16,7 @@ import org.apache.hadoop.util.Tool;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
-public class Histogram implements Tool {
+public class Ngrams implements Tool {
 
     private Configuration conf;
 
@@ -29,21 +28,21 @@ public class Histogram implements Tool {
             usage();
 
         Job job = new Job(conf);
-        job.setJobName("histogram");
-        job.setJarByClass(Histogram.class);
+        job.setJobName("ngrams");
+        job.setJarByClass(Ngrams.class);
 
         job.setInputFormatClass(input.class);
         input.addInputPath(job, new Path(rest[0]));
 
         job.setMapperClass(mapper.class);
-        job.setMapOutputKeyClass(IntWritable.class);
+        job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(IntWritable.class);
 
         job.setCombinerClass(combiner.class);
         job.setReducerClass(reducer.class);
 
         job.setOutputFormatClass(output.class);
-        job.setOutputKeyClass(IntWritable.class);
+        job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
         output.setOutputPath(job, new Path(rest[1]));
 
@@ -51,7 +50,7 @@ public class Histogram implements Tool {
     }
 
     private void usage() {
-        System.err.println("usage: hadoop -jar <...> histogram <input> <output>");
+        System.err.println("usage: hadoop -jar <...> ngrams <input> <output>");
         System.exit(-1);
     }
 
@@ -66,45 +65,55 @@ public class Histogram implements Tool {
     }
 
     //
-    public static class input extends KeyValueTextInputFormat {
+    public static class input extends TextInputFormat {
 
     }
 
     // Type params: input key, input value, output key, output value
-    public static class mapper extends Mapper<Text, Text, IntWritable, IntWritable> {
-        private IntWritable key = new IntWritable(0);
+    public static class mapper extends Mapper<LongWritable, Text, Text, IntWritable> {
+        private static int n = 3;
+        private Text ngram = new Text("");
         private IntWritable one = new IntWritable(1);
 
         @Override
-        protected void map(Text word, Text freq, Context ctx)
+        protected void map(LongWritable _, Text line, Context ctx)
                 throws IOException, InterruptedException {
-            // One word with the given frequency
-            key.set(Integer.parseInt(freq.toString()));
-            ctx.write(key, one);
+            String delimiters = " \u00A0\t\r\n\f~`!@#$%^&*()[{]}/?=+\\|-_'\",<.>;:";
+            StringTokenizer tok = new StringTokenizer(line.toString(), delimiters);
+
+            while (tok.hasMoreTokens()) {
+                String word = tok.nextToken();
+                int wordLen = word.length();
+
+                for (int k = 0; k+n < wordLen; k ++) {
+                    ngram.set(word.substring(k, k+n));
+                    ctx.write(ngram, one);
+                }
+            }
         }
     }
 
     //
-    public static class combiner extends Reducer<IntWritable, IntWritable, IntWritable, IntWritable> {
+    public static class combiner extends Reducer<Text, IntWritable, Text, IntWritable> {
         @Override
-        protected void reduce(IntWritable freq, Iterable<IntWritable> counts, Context ctx)
+        protected void reduce(Text ngram, Iterable<IntWritable> counts, Context ctx)
                 throws IOException, InterruptedException {
             int sum = 0;
             for (IntWritable count: counts)
                 sum += count.get();
-            ctx.write(freq, new IntWritable(sum));
+            ctx.write(ngram, new IntWritable(sum));
         }
     }
 
     //
-    public static class reducer extends Reducer<IntWritable, IntWritable, IntWritable, IntWritable> {
+    public static class reducer extends Reducer<Text, IntWritable, Text, IntWritable> {
         @Override
-        protected void reduce(IntWritable freq, Iterable<IntWritable> counts, Context ctx)
+        protected void reduce(Text ngram, Iterable<IntWritable> counts, Context ctx)
                 throws IOException, InterruptedException {
             int sum = 0;
             for (IntWritable count: counts)
                 sum += count.get();
-            ctx.write(freq, new IntWritable(sum));
+            ctx.write(ngram, new IntWritable(sum));
         }
     }
 
