@@ -77,11 +77,11 @@ public class WordCount implements Tool {
         @Override
         protected void map(LongWritable _, Text line, Context ctx)
                 throws IOException, InterruptedException {
-            String delimiters = " \t\r\n\f~`!@#$%^&*()[{]}/?=+\\|-_'\",<.>;:";
+            String delimiters = " \u00A0\t\r\n\f~`!@#$%^&*()[{]}/?=+\\|-_'\",<.>;:";
             StringTokenizer tok = new StringTokenizer(line.toString(), delimiters);
 
             while (tok.hasMoreTokens()) {
-                word.set(tok.nextToken());
+                word.set(tok.nextToken().toLowerCase());
                 ctx.write(word, one);
             }
         }

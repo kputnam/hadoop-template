@@ -71,14 +71,14 @@ public class Ngrams implements Tool {
 
     // Type params: input key, input value, output key, output value
     public static class mapper extends Mapper<LongWritable, Text, Text, IntWritable> {
-        private int n = 2;
+        private static int n = 3;
         private Text ngram = new Text("");
         private IntWritable one = new IntWritable(1);
 
         @Override
         protected void map(LongWritable _, Text line, Context ctx)
                 throws IOException, InterruptedException {
-            String delimiters = " \t\r\n\f~`!@#$%^&*()[{]}/?=+\\|-_'\",<.>;:";
+            String delimiters = " \u00A0\t\r\n\f~`!@#$%^&*()[{]}/?=+\\|-_'\",<.>;:";
             StringTokenizer tok = new StringTokenizer(line.toString(), delimiters);
 
             while (tok.hasMoreTokens()) {
