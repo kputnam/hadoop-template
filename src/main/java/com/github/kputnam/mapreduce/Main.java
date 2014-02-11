@@ -9,7 +9,7 @@ import java.util.Arrays;
  */
 public class Main {
 
-    public void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         if (args.length < 1)
             usage();
 
@@ -27,7 +27,7 @@ public class Main {
         usage();
     }
 
-    private void usage() {
+    private static void usage() {
         System.err.println("usage: hadoop -jar <...> <wordcount|ngrams|...> <args...>");
         System.exit(-1);
     }
