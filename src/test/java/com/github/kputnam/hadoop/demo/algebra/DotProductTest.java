@@ -1,11 +1,7 @@
 package com.github.kputnam.hadoop.demo.algebra;
 
-import com.google.common.collect.ImmutableList;
 import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.mrunit.PipelineMapReduceDriver;
-import org.apache.hadoop.mrunit.mapreduce.MapDriver;
 import org.apache.hadoop.mrunit.mapreduce.MapReduceDriver;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,21 +57,21 @@ public class DotProductTest {
     @Test
     public void testRightZero() throws Exception {
         compareImpls(
-            new double[]{1d, 2d, 3d},
-            new double[]{0d, 0d, 0d});
+            new double[] { 1d, 2d, 3d },
+            new double[] { 0d, 0d, 0d });
     }
 
     @Test
     public void testLeftOne() throws Exception {
         compareImpls(
-            new double[]{1d, 1d, 1d, 1d},
-            new double[]{2d, 3d, 4d, 5d});
+            new double[] { 1d, 1d, 1d, 1d },
+            new double[] { 2d, 3d, 4d, 5d });
     }
 
     @Test
     public void testRightOne() throws Exception {
         compareImpls(
-            new double[]{2d, 3d, 4d, 5d},
-            new double[]{1d, 1d, 1d, 1d});
+            new double[] { 2d, 3d, 4d, 5d },
+            new double[] { 1d, 1d, 1d, 1d });
     }
 }
