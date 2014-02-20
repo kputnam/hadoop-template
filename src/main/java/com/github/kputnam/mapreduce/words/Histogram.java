@@ -1,6 +1,7 @@
 package com.github.kputnam.mapreduce.words;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
@@ -14,23 +15,18 @@ import org.apache.hadoop.util.Tool;
 
 import java.io.IOException;
 
-public class Histogram implements Tool {
-
-    private Configuration conf;
+public class Histogram extends Configured implements Tool {
 
     @Override
     public int run(String[] args) throws Exception {
-        String[] rest = new GenericOptionsParser(conf, args).getRemainingArgs();
-
-        if (rest.length != 2)
+        if (args.length != 2)
             usage();
 
-        Job job = new Job(conf);
-        job.setJobName("histogram");
-        job.setJarByClass(Histogram.class);
+        String inputPath  = args[0];
+        String outputPath = args[1];
 
-        job.setInputFormatClass(input.class);
-        input.addInputPath(job, new Path(rest[0]));
+        Job job = new Job(getConf(), "histogram");
+        job.setJarByClass(Histogram.class);
 
         job.setMapperClass(mapper.class);
         job.setMapOutputKeyClass(IntWritable.class);
@@ -39,10 +35,16 @@ public class Histogram implements Tool {
         job.setCombinerClass(combiner.class);
         job.setReducerClass(reducer.class);
 
-        job.setOutputFormatClass(output.class);
         job.setOutputKeyClass(IntWritable.class);
         job.setOutputValueClass(IntWritable.class);
-        output.setOutputPath(job, new Path(rest[1]));
+
+        //
+
+        job.setInputFormatClass(input.class);
+        input.addInputPath(job, new Path(inputPath));
+
+        job.setOutputFormatClass(output.class);
+        output.setOutputPath(job, new Path(outputPath));
 
         return job.waitForCompletion(true) ? 0 : 1;
     }
@@ -50,16 +52,6 @@ public class Histogram implements Tool {
     private void usage() {
         System.err.println("usage: hadoop -jar <...> histogram <input> <output>");
         System.exit(-1);
-    }
-
-    @Override
-    public void setConf(Configuration conf) {
-        this.conf = conf;
-    }
-
-    @Override
-    public Configuration getConf() {
-        return conf;
     }
 
     //
@@ -106,7 +98,7 @@ public class Histogram implements Tool {
     }
 
     //
-    public static class output extends TextOutputFormat {
+    public static class output extends TextOutputFormat<IntWritable, IntWritable> {
 
     }
 
