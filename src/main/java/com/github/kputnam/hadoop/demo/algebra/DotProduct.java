@@ -61,6 +61,7 @@ public class DotProduct extends Configured implements Tool {
 
     }
 
+    //
     public static class mapper
             extends Mapper<NullWritable, Pair, NullWritable, DoubleWritable> {
         DoubleWritable product = new DoubleWritable();
@@ -72,6 +73,7 @@ public class DotProduct extends Configured implements Tool {
         }
     }
 
+    //
     public static class reducer
             extends Reducer<NullWritable, DoubleWritable,
                             NullWritable, DoubleWritable> {

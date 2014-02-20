@@ -28,7 +28,7 @@ public class Ngrams extends Configured implements Tool {
         Job job = new Job(getConf(), "ngrams");
         job.setJarByClass(Ngrams.class);
 
-        job.setMapperClass(mapper.class);
+        job.setMapperClass(charMapper.class);
         job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(IntWritable.class);
 
@@ -60,10 +60,12 @@ public class Ngrams extends Configured implements Tool {
     }
 
     // Type params: input key, input value, output key, output value
-    public static class mapper extends Mapper<LongWritable, Text, Text, IntWritable> {
+    public static class charMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
         private static int n = 3;
         private Text ngram = new Text("");
         private IntWritable one = new IntWritable(1);
+
+        public static void setN(int n) { charMapper.n = n; }
 
         @Override
         protected void map(LongWritable _, Text line, Context ctx)
@@ -75,10 +77,50 @@ public class Ngrams extends Configured implements Tool {
                 String word = tok.nextToken();
                 int wordLen = word.length();
 
-                for (int k = 0; k+n < wordLen; k ++) {
+                for (int k = 0; k+n <= wordLen; k ++) {
                     ngram.set(word.substring(k, k+n));
                     ctx.write(ngram, one);
                 }
+            }
+        }
+    }
+
+    //
+    public static class wordMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
+        private Text ngram = new Text("");
+        private IntWritable one = new IntWritable(1);
+
+        private static int n = 3;
+        private long bufferIdx = 0;
+        private String[] buffer = null;
+        private StringBuilder sb = new StringBuilder();
+
+        public static void setN(int n) { charMapper.n = n; }
+
+        @Override
+        protected void map(LongWritable _, Text line, Context ctx)
+                throws IOException, InterruptedException {
+            if (buffer == null)
+                buffer = new String[n];
+
+            String delimiters = " \u00A0\t\r\n\f~`!@#$%^&*()[{]}/?=+\\|-_'\",<.>;:";
+            StringTokenizer tok = new StringTokenizer(line.toString(), delimiters);
+
+            while (tok.hasMoreTokens()) {
+                // Shift in a new token with trailing whitespace
+                buffer[(int) (bufferIdx++ % n)] = tok.nextToken() + " ";
+
+                if (bufferIdx < n)
+                    continue;
+
+                // Copy n-word buffer to output
+                sb.setLength(0);
+                for (int k = 0; k < n; k ++)
+                    sb.append(buffer[((int) (k + bufferIdx)) % n]);
+
+                sb.setLength(sb.length() - 1); // Remove trailing " "
+                ngram.set(sb.toString());
+                ctx.write(ngram, one);
             }
         }
     }
