@@ -1,6 +1,7 @@
 package com.github.kputnam.mapreduce.words;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
@@ -16,23 +17,18 @@ import org.apache.hadoop.util.Tool;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
-public class WordCount implements Tool {
-
-    private Configuration conf;
+public class WordCount extends Configured implements Tool {
 
     @Override
     public int run(String[] args) throws Exception {
-        String[] rest = new GenericOptionsParser(conf, args).getRemainingArgs();
-
-        if (rest.length != 2)
+        if (args.length != 2)
             usage();
 
-        Job job = new Job(conf);
-        job.setJobName("word-count");
-        job.setJarByClass(WordCount.class);
+        String inputPath  = args[0];
+        String outputPath = args[1];
 
-        job.setInputFormatClass(input.class);
-        input.addInputPath(job, new Path(rest[0]));
+        Job job = new Job(getConf(), "wordcount");
+        job.setJarByClass(WordCount.class);
 
         job.setMapperClass(mapper.class);
         job.setMapOutputKeyClass(Text.class);
@@ -41,10 +37,16 @@ public class WordCount implements Tool {
         job.setCombinerClass(combiner.class);
         job.setReducerClass(reducer.class);
 
-        job.setOutputFormatClass(output.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
-        output.setOutputPath(job, new Path(rest[1]));
+
+        //
+
+        job.setInputFormatClass(input.class);
+        input.addInputPath(job, new Path(inputPath));
+
+        job.setOutputFormatClass(output.class);
+        output.setOutputPath(job, new Path(outputPath));
 
         return job.waitForCompletion(true) ? 0 : 1;
     }
@@ -52,16 +54,6 @@ public class WordCount implements Tool {
     private void usage() {
         System.err.println("usage: hadoop -jar <...> wordcount <input> <output>");
         System.exit(-1);
-    }
-
-    @Override
-    public void setConf(Configuration conf) {
-        this.conf = conf;
-    }
-
-    @Override
-    public Configuration getConf() {
-        return conf;
     }
 
     //
@@ -112,7 +104,7 @@ public class WordCount implements Tool {
     }
 
     //
-    public static class output extends TextOutputFormat {
+    public static class output extends TextOutputFormat<Text, IntWritable> {
 
     }
 
