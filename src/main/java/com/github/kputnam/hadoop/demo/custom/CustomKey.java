@@ -1,4 +1,4 @@
-package com.github.kputnam.mapreduce.custom;
+package com.github.kputnam.hadoop.demo.custom;
 
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.io.WritableComparable;

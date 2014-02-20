@@ -1,6 +1,5 @@
-package com.github.kputnam.mapreduce.words;
+package com.github.kputnam.hadoop.demo.words;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -11,13 +10,12 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
-import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 
 import java.io.IOException;
 import java.util.StringTokenizer;
 
-public class WordCount extends Configured implements Tool {
+public class Ngrams extends Configured implements Tool {
 
     @Override
     public int run(String[] args) throws Exception {
@@ -27,8 +25,8 @@ public class WordCount extends Configured implements Tool {
         String inputPath  = args[0];
         String outputPath = args[1];
 
-        Job job = new Job(getConf(), "wordcount");
-        job.setJarByClass(WordCount.class);
+        Job job = new Job(getConf(), "ngrams");
+        job.setJarByClass(Ngrams.class);
 
         job.setMapperClass(mapper.class);
         job.setMapOutputKeyClass(Text.class);
@@ -52,7 +50,7 @@ public class WordCount extends Configured implements Tool {
     }
 
     private void usage() {
-        System.err.println("usage: hadoop -jar <...> wordcount <input> <output>");
+        System.err.println("usage: hadoop -jar <...> ngrams <input> <output>");
         System.exit(-1);
     }
 
@@ -63,7 +61,8 @@ public class WordCount extends Configured implements Tool {
 
     // Type params: input key, input value, output key, output value
     public static class mapper extends Mapper<LongWritable, Text, Text, IntWritable> {
-        private Text word = new Text("");
+        private static int n = 3;
+        private Text ngram = new Text("");
         private IntWritable one = new IntWritable(1);
 
         @Override
@@ -73,8 +72,13 @@ public class WordCount extends Configured implements Tool {
             StringTokenizer tok = new StringTokenizer(line.toString(), delimiters);
 
             while (tok.hasMoreTokens()) {
-                word.set(tok.nextToken().toLowerCase());
-                ctx.write(word, one);
+                String word = tok.nextToken();
+                int wordLen = word.length();
+
+                for (int k = 0; k+n < wordLen; k ++) {
+                    ngram.set(word.substring(k, k+n));
+                    ctx.write(ngram, one);
+                }
             }
         }
     }
@@ -82,24 +86,24 @@ public class WordCount extends Configured implements Tool {
     //
     public static class combiner extends Reducer<Text, IntWritable, Text, IntWritable> {
         @Override
-        protected void reduce(Text word, Iterable<IntWritable> counts, Context ctx)
+        protected void reduce(Text ngram, Iterable<IntWritable> counts, Context ctx)
                 throws IOException, InterruptedException {
             int sum = 0;
             for (IntWritable count: counts)
                 sum += count.get();
-            ctx.write(word, new IntWritable(sum));
+            ctx.write(ngram, new IntWritable(sum));
         }
     }
 
     //
     public static class reducer extends Reducer<Text, IntWritable, Text, IntWritable> {
         @Override
-        protected void reduce(Text word, Iterable<IntWritable> counts, Context ctx)
+        protected void reduce(Text ngram, Iterable<IntWritable> counts, Context ctx)
                 throws IOException, InterruptedException {
             int sum = 0;
             for (IntWritable count: counts)
                 sum += count.get();
-            ctx.write(word, new IntWritable(sum));
+            ctx.write(ngram, new IntWritable(sum));
         }
     }
 

@@ -1,21 +1,21 @@
-package com.github.kputnam.mapreduce.words;
+package com.github.kputnam.hadoop.demo.words;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
-import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 
 import java.io.IOException;
+import java.util.StringTokenizer;
 
-public class Histogram extends Configured implements Tool {
+public class WordCount extends Configured implements Tool {
 
     @Override
     public int run(String[] args) throws Exception {
@@ -25,17 +25,17 @@ public class Histogram extends Configured implements Tool {
         String inputPath  = args[0];
         String outputPath = args[1];
 
-        Job job = new Job(getConf(), "histogram");
-        job.setJarByClass(Histogram.class);
+        Job job = new Job(getConf(), "wordcount");
+        job.setJarByClass(WordCount.class);
 
         job.setMapperClass(mapper.class);
-        job.setMapOutputKeyClass(IntWritable.class);
+        job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(IntWritable.class);
 
         job.setCombinerClass(combiner.class);
         job.setReducerClass(reducer.class);
 
-        job.setOutputKeyClass(IntWritable.class);
+        job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
 
         //
@@ -50,55 +50,59 @@ public class Histogram extends Configured implements Tool {
     }
 
     private void usage() {
-        System.err.println("usage: hadoop -jar <...> histogram <input> <output>");
+        System.err.println("usage: hadoop -jar <...> wordcount <input> <output>");
         System.exit(-1);
     }
 
     //
-    public static class input extends KeyValueTextInputFormat {
+    public static class input extends TextInputFormat {
 
     }
 
     // Type params: input key, input value, output key, output value
-    public static class mapper extends Mapper<Text, Text, IntWritable, IntWritable> {
-        private IntWritable key = new IntWritable(0);
+    public static class mapper extends Mapper<LongWritable, Text, Text, IntWritable> {
+        private Text word = new Text("");
         private IntWritable one = new IntWritable(1);
 
         @Override
-        protected void map(Text word, Text freq, Context ctx)
+        protected void map(LongWritable _, Text line, Context ctx)
                 throws IOException, InterruptedException {
-            // One word with the given frequency
-            key.set(Integer.parseInt(freq.toString()));
-            ctx.write(key, one);
+            String delimiters = " \u00A0\t\r\n\f~`!@#$%^&*()[{]}/?=+\\|-_'\",<.>;:";
+            StringTokenizer tok = new StringTokenizer(line.toString(), delimiters);
+
+            while (tok.hasMoreTokens()) {
+                word.set(tok.nextToken().toLowerCase());
+                ctx.write(word, one);
+            }
         }
     }
 
     //
-    public static class combiner extends Reducer<IntWritable, IntWritable, IntWritable, IntWritable> {
+    public static class combiner extends Reducer<Text, IntWritable, Text, IntWritable> {
         @Override
-        protected void reduce(IntWritable freq, Iterable<IntWritable> counts, Context ctx)
+        protected void reduce(Text word, Iterable<IntWritable> counts, Context ctx)
                 throws IOException, InterruptedException {
             int sum = 0;
             for (IntWritable count: counts)
                 sum += count.get();
-            ctx.write(freq, new IntWritable(sum));
+            ctx.write(word, new IntWritable(sum));
         }
     }
 
     //
-    public static class reducer extends Reducer<IntWritable, IntWritable, IntWritable, IntWritable> {
+    public static class reducer extends Reducer<Text, IntWritable, Text, IntWritable> {
         @Override
-        protected void reduce(IntWritable freq, Iterable<IntWritable> counts, Context ctx)
+        protected void reduce(Text word, Iterable<IntWritable> counts, Context ctx)
                 throws IOException, InterruptedException {
             int sum = 0;
             for (IntWritable count: counts)
                 sum += count.get();
-            ctx.write(freq, new IntWritable(sum));
+            ctx.write(word, new IntWritable(sum));
         }
     }
 
     //
-    public static class output extends TextOutputFormat<IntWritable, IntWritable> {
+    public static class output extends TextOutputFormat<Text, IntWritable> {
 
     }
 

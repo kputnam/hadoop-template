@@ -1,6 +1,6 @@
-package com.github.kputnam.mapreduce.custom.v1;
+package com.github.kputnam.hadoop.demo.custom.v1;
 
-import com.github.kputnam.mapreduce.custom.CustomVal;
+import com.github.kputnam.hadoop.demo.custom.CustomVal;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
