@@ -1,33 +1,38 @@
 package com.github.kputnam.mapreduce;
 
+import com.github.kputnam.mapreduce.algebra.DotProduct;
 import com.github.kputnam.mapreduce.words.Histogram;
 import com.github.kputnam.mapreduce.words.Ngrams;
 import com.github.kputnam.mapreduce.words.WordCount;
+import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by kputnam on 2/10/14.
  */
 public class Main {
+    final static Map<String, Class<? extends Tool>> tools =
+            new HashMap<String, Class<? extends Tool>>();
+
+    static {
+        tools.put("ngrams", Ngrams.class);
+        tools.put("wordcount", WordCount.class);
+        tools.put("histogram", Histogram.class);
+        tools.put("dotproduct", DotProduct.class);
+    }
 
     public static void main(String[] args) throws Exception {
-        if (args.length < 1)
+        if (args.length < 1 || !tools.containsKey(args[0]))
             usage();
 
+        Tool tool = tools.get(args[0]).newInstance();
         String[] rest = Arrays.copyOfRange(args, 1, args.length);
 
-        if ("ngrams".equals(args[0]))
-            System.exit(ToolRunner.run(new Ngrams(), rest));
-
-        if ("wordcount".equals(args[0]))
-            System.exit(ToolRunner.run(new WordCount(), rest));
-
-        if ("histogram".equals(args[0]))
-            System.exit(ToolRunner.run(new Histogram(), rest));
-
-        usage();
+        System.exit(ToolRunner.run(tool, rest));
     }
 
     private static void usage() {
