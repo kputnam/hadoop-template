@@ -1,4 +1,4 @@
-package com.github.kputnam.mapreduce.custom;
+package com.github.kputnam.hadoop.demo.custom;
 
 import org.apache.hadoop.io.Writable;
 

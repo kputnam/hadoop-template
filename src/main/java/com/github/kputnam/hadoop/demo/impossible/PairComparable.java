@@ -1,4 +1,4 @@
-package com.github.kputnam.mapreduce.util;
+package com.github.kputnam.hadoop.demo.impossible;
 
 import org.apache.hadoop.io.WritableComparable;
 
@@ -12,7 +12,7 @@ public class PairComparable<A extends WritableComparable,
 
     public static <A extends WritableComparable,
                    B extends WritableComparable>
-        Pair<A, B> build(A fst, B snd) {
+        Pair<A, B> of(A fst, B snd) {
         return new Pair(fst, snd);
     }
 

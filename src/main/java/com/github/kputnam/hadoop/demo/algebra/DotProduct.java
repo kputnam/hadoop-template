@@ -1,6 +1,5 @@
-package com.github.kputnam.mapreduce.algebra;
+package com.github.kputnam.hadoop.demo.algebra;
 
-import com.github.kputnam.mapreduce.util.Pair;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
@@ -59,17 +58,16 @@ public class DotProduct extends Configured implements Tool {
 
     //
     public static class input
-            extends SequenceFileInputFormat<NullWritable, Pair<DoubleWritable, DoubleWritable>> {
+            extends SequenceFileInputFormat<NullWritable, Pair> {
 
     }
 
     public static class mapper
-            extends Mapper<LongWritable, Pair<DoubleWritable, DoubleWritable>,
-                           NullWritable, DoubleWritable> {
+            extends Mapper<NullWritable, Pair, NullWritable, DoubleWritable> {
         DoubleWritable product = new DoubleWritable();
 
         @Override
-        protected void map(LongWritable _, Pair<DoubleWritable, DoubleWritable> pair, Context ctx) throws IOException, InterruptedException {
+        protected void map(NullWritable _, Pair pair, Context ctx) throws IOException, InterruptedException {
             product.set(pair.fst.get() * pair.snd.get());
             ctx.write(NullWritable.get(), product);
         }

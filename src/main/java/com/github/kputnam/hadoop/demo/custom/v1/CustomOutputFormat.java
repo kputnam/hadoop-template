@@ -1,4 +1,4 @@
-package com.github.kputnam.mapreduce.custom.v1;
+package com.github.kputnam.hadoop.demo.custom.v1;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;

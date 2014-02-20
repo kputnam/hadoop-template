@@ -1,9 +1,9 @@
-package com.github.kputnam.mapreduce;
+package com.github.kputnam.hadoop.demo;
 
-import com.github.kputnam.mapreduce.algebra.DotProduct;
-import com.github.kputnam.mapreduce.words.Histogram;
-import com.github.kputnam.mapreduce.words.Ngrams;
-import com.github.kputnam.mapreduce.words.WordCount;
+import com.github.kputnam.hadoop.demo.algebra.DotProduct;
+import com.github.kputnam.hadoop.demo.words.Histogram;
+import com.github.kputnam.hadoop.demo.words.Ngrams;
+import com.github.kputnam.hadoop.demo.words.WordCount;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
