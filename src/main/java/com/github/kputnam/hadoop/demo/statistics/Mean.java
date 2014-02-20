@@ -25,6 +25,20 @@ public class Mean extends Configured implements Tool {
         public DoubleWritable sum;
         public IntWritable cnt;
 
+        public static meanMonoid zero() { return new meanMonoid(); }
+
+        public static meanMonoid concat(Iterable<meanMonoid> those) {
+            double sum = 0d;
+            int    cnt = 0;
+
+            for (meanMonoid that: those) {
+                sum += that.sum.get();
+                cnt ++;
+            }
+
+            return new meanMonoid(sum, cnt);
+        }
+
         public meanMonoid() {
             this.sum = new DoubleWritable(0);
             this.cnt = new IntWritable(0);
@@ -38,18 +52,6 @@ public class Mean extends Configured implements Tool {
         public meanMonoid(double sum, int cnt) {
             this.sum = new DoubleWritable(sum);
             this.cnt = new IntWritable(cnt);
-        }
-
-        public static meanMonoid append(Iterable<meanMonoid> those) {
-            double sum = 0d;
-            int    cnt = 0;
-
-            for (meanMonoid that: those) {
-                sum += that.sum.get();
-                cnt ++;
-            }
-
-            return new meanMonoid(sum, cnt);
         }
 
         public DoubleWritable mean() {
@@ -81,14 +83,14 @@ public class Mean extends Configured implements Tool {
     public static class combiner<K> extends Reducer<K, meanMonoid, K, meanMonoid> {
         @Override
         protected void reduce(K key, Iterable<meanMonoid> vals, Context ctx) throws IOException, InterruptedException {
-            ctx.write(key, meanMonoid.append(vals));
+            ctx.write(key, meanMonoid.concat(vals));
         }
     }
 
     public static class reduce<K> extends Reducer<K, meanMonoid, K, DoubleWritable> {
         @Override
         protected void reduce(K key, Iterable<meanMonoid> vals, Context ctx) throws IOException, InterruptedException {
-            ctx.write(key, meanMonoid.append(vals).mean());
+            ctx.write(key, meanMonoid.concat(vals).mean());
         }
     }
 }
