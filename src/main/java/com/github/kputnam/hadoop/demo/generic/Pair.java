@@ -25,7 +25,7 @@ public class Pair<A extends Writable,
     public Pair() { }
     public Pair(A fst, B snd) { this.fst = fst; this.snd = snd; }
     public static <A extends Writable, B extends Writable>
-    Pair<A, B> of(A fst, B snd) { return new Pair(fst, snd); }
+    Pair<A, B> of(A fst, B snd) { return new Pair<A, B>(fst, snd); }
 
     @Override
     public boolean equals(Object o) {
