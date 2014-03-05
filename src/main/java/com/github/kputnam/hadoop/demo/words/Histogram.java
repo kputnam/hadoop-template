@@ -52,11 +52,29 @@ public class Histogram extends Configured implements Tool {
         System.exit(-1);
     }
 
-    //
+    /**
+     * This built-in input format reads a "key\tval" pair from each line
+     * and emits them as Text. We can then parse the Text into the correct
+     * data types in the Mapper, below.
+     */
     public static class input extends KeyValueTextInputFormat {
 
     }
 
+    /**
+     * Reduce
+     *   (1, 1)     -- one word shows up once
+     *   (1, 1)
+     *   (1, 10)    -- ten words appear once
+     *   (2, 3)
+     *   (2, 5)     -- five words appear twice
+     *   ...
+     *
+     * To
+     *   (1, 12)    -- twelve words appear exactly once
+     *   (2, 8)     -- eight words appear exactly twice
+     *   ...
+     */
     // Type params: input key, input value, output key, output value
     public static class mapper extends Mapper<Text, Text, IntWritable, IntWritable> {
         private IntWritable key = new IntWritable(0);

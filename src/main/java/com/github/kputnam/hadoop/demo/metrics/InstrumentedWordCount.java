@@ -14,7 +14,7 @@ import org.apache.hadoop.util.Tool;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
-public class Instrumented extends Configured implements Tool {
+public class InstrumentedWordCount extends Configured implements Tool {
 
     @Override
     public int run(String[] args) throws Exception {
@@ -25,7 +25,7 @@ public class Instrumented extends Configured implements Tool {
         String outputPath = args[1];
 
         Job job = new Job(getConf(), "metrics");
-        job.setJarByClass(Instrumented.class);
+        job.setJarByClass(InstrumentedWordCount.class);
 
         job.setMapperClass(mapper.class);
         job.setMapOutputKeyClass(Text.class);
