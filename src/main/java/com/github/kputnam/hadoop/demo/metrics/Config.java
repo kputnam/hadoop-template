@@ -106,4 +106,18 @@ public class Config {
     public Config loadFrom(Config that) {
         return that.mergeInto(this);
     }
+
+    public String toString() {
+        StringBuilder b = new StringBuilder();
+        b.append("Config(");
+        b.append("configPath="); b.append(getConfigPath());
+        b.append(", metricPrefix="); b.append(getMetricPrefix());
+        b.append(", graphitePort="); b.append(getGraphitePort());
+        b.append(", graphiteHost="); b.append(getGraphiteHost());
+        b.append(", reportInterval="); b.append(getReportInterval());
+        b.append(", rateUnits="); b.append(getRateUnits());
+        b.append(", durationUnits="); b.append(getDurationUnits());
+        b.append(")");
+        return b.toString();
+    }
 }
