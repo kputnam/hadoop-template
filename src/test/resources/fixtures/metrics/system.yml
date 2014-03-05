@@ -1,0 +1,4 @@
+configPath: /tmp/metrics.yml
+metricPrefix: test-xxx
+rateUnits: MICROSECONDS
+durationUnits: SECONDS

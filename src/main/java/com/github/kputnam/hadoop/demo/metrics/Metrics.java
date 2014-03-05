@@ -11,8 +11,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -23,12 +21,23 @@ public class Metrics {
     private static MetricRegistry registry;
     private static ScheduledReporter reporter;
 
+    public static void report() {
+        if (reporter == null)
+            return;
+
+        reporter.report();
+    }
+
     public static void close() {
         if (registry == null || reporter == null)
             return;
 
         reporter.report();
         reporter.close();
+
+        registry.removeMatching(MetricFilter.ALL);
+        registry = null;
+        reporter = null;
     }
 
     public static <T extends Metric> T gauge(String name, T metric) {
@@ -55,169 +64,67 @@ public class Metrics {
         if (registry != null)
             return registry;
 
-        registry = new MetricRegistry();
-        reporter = configureGraphite(registry);
+        try {
+            registry = new MetricRegistry();
+            reporter = configureReporter(registry, loadConfig());
+        } catch(FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
 
         return registry;
     }
 
-    public static ScheduledReporter configureGraphite(MetricRegistry registry) {
-        Config config;
-
-        try { config = readConfiguration(); }
-        catch (Exception e) { throw new RuntimeException(e); }
-
-        if (config.graphitePort == -1 || config.graphiteHost == null)
+    public static ScheduledReporter configureReporter(MetricRegistry registry, Config config) {
+        if (config.getGraphitePort() == -1 || config.getGraphiteHost() == null)
             return null;
 
         GraphiteReporter reporter = GraphiteReporter.forRegistry(registry)
-                .prefixedWith(config.getMetricPrefix())
                 .filter(MetricFilter.ALL)
+                .prefixedWith(config.getMetricPrefix())
                 .convertRatesTo(config.getRateUnits())
                 .convertDurationsTo(config.getDurationUnits())
                 .build(new Graphite(new InetSocketAddress(
                         config.getGraphiteHost(), config.getGraphitePort())));
 
-        reporter.start(config.reportInterval, TimeUnit.SECONDS);
+        reporter.start(config.getReportInterval(), TimeUnit.SECONDS);
         return reporter;
     }
 
-    private static Config readConfiguration() throws Exception {
-        Yaml yaml = new Yaml(new Constructor(Config.class));
-
-        Config config = new Config();
-
-        // Search classpath for application-specific configuration
-        InputStream inLocal = Metrics.class.getResourceAsStream("/metrics.yml");
-        if (inLocal != null)
-            ((Config) yaml.load(inLocal)).mergeInto(config);
-
-        String cfgPath = config.getClusterConfig();
-
-        // Look for host-specific configuration
-        if (cfgPath != null) {
-            File cfgFile = new File(cfgPath);
-
-            if (!cfgFile.exists() || cfgFile.isDirectory())
-                throw new FileNotFoundException("File not found: " + cfgPath);
-            else
-                config = config.mergeInto((Config) yaml.load(new FileInputStream(cfgFile)));
-        }
-
-        return config;
+    public static Config loadConfig() throws FileNotFoundException {
+        return loadConfig("/metrics.yml");
     }
 
-    public static class Config {
-        private String clusterConfig = "";
-        private String metricPrefix = "";
+    public static Config loadConfig(String resourcePath) throws FileNotFoundException {
+        Yaml yaml = new Yaml(new Constructor(Config.class));
 
-        private int graphitePort = -1;
-        private String graphiteHost = null;
+        Config cfgYaml = null;
+        Config cfgResult = new Config();
 
-        private int reportInterval = -1;
-        private TimeUnit rateUnits = TimeUnit.MILLISECONDS;
-        private TimeUnit durationUnits = TimeUnit.MILLISECONDS;
+        // Read application-specific configuration (from classpath)
+        InputStream inLocal = Metrics.class.getResourceAsStream(resourcePath);
+        if (inLocal == null)
+            throw new FileNotFoundException(resourcePath);
 
-        private static final Map<String, TimeUnit> units = new HashMap<String, TimeUnit>();
-        static {
-            units.put("us", TimeUnit.MICROSECONDS);
-            units.put("ms", TimeUnit.MILLISECONDS);
-            units.put("s",  TimeUnit.SECONDS);
-            units.put("m",  TimeUnit.MINUTES);
-            units.put("hr", TimeUnit.HOURS);
-            units.put("d",  TimeUnit.DAYS);
-        }
+        cfgYaml = (Config) yaml.load(inLocal);
+        if (cfgYaml == null)
+            throw new IllegalArgumentException("Empty document: " + resourcePath);
 
-        public String getClusterConfig() {
-            return clusterConfig;
-        }
+        cfgResult.loadFrom(cfgYaml);
 
-        public void setClusterConfig(String clusterConfig) {
-            this.clusterConfig = clusterConfig;
-        }
+        // Read host-specific configuration
+        if (cfgResult.getConfigPath() == null)
+            return cfgResult;
 
-        public int getGraphitePort() {
-            return graphitePort;
-        }
+        File cfgFile = new File(cfgResult.getConfigPath());
+        if (!cfgFile.exists() || cfgFile.isDirectory())
+            throw new FileNotFoundException(cfgResult.getConfigPath());
 
-        public void setGraphitePort(int graphitePort) {
-            this.graphitePort = graphitePort;
-        }
+        cfgYaml = (Config) yaml.load(new FileInputStream(cfgFile));
+        if (cfgYaml == null)
+            throw new IllegalArgumentException("Empty document: " + cfgResult.getConfigPath());
 
-        public String getGraphiteHost() {
-            return graphiteHost;
-        }
+        cfgResult.loadFrom(cfgYaml);
 
-        public void setGraphiteHost(String graphiteHost) {
-            this.graphiteHost = graphiteHost;
-        }
-
-        public String getMetricPrefix() {
-            return metricPrefix;
-        }
-
-        public void setMetricPrefix(String metricPrefix) {
-            this.metricPrefix = metricPrefix;
-        }
-
-        public int getReportInterval() {
-            return reportInterval;
-        }
-
-        public void setReportInterval(int reportInterval) {
-            this.reportInterval = reportInterval;
-        }
-
-        public TimeUnit getRateUnits() {
-            return rateUnits;
-        }
-
-        public void setRateUnits(TimeUnit rateUnits) {
-            this.rateUnits = rateUnits;
-        }
-
-        public void setRateUnits(String ratesUnit) {
-            if (units.containsKey(ratesUnit))
-                throw new IllegalArgumentException("Not a valid unit: '" + ratesUnit + "'");
-
-            setRateUnits(units.get(ratesUnit));
-        }
-
-        public TimeUnit getDurationUnits() {
-            return durationUnits;
-        }
-
-        public void setDurationUnits(TimeUnit durationUnits) {
-            this.durationUnits = durationUnits;
-        }
-
-        public void setDurationUnits(String durationsUnit) {
-            if (units.containsKey(rateUnits))
-                throw new IllegalArgumentException("Not a valid unit: '" + rateUnits + "'");
-
-            setDurationUnits(units.get(durationsUnit));
-        }
-
-        public Config mergeInto(Config that) {
-            if (this.metricPrefix != null)
-                that.setMetricPrefix(this.metricPrefix);
-
-            if (this.graphitePort != -1)
-                that.setGraphitePort(this.graphitePort);
-
-            if (this.graphiteHost != null)
-                that.setGraphiteHost(this.graphiteHost);
-
-            if (this.reportInterval != -1)
-                that.setReportInterval(this.reportInterval);
-
-            if (this.rateUnits != null)
-                that.setRateUnits(this.rateUnits);
-
-            if (this.durationUnits != null)
-                that.setDurationUnits(this.durationUnits);
-
-            return that;
-        }
+        return cfgResult;
     }
 }

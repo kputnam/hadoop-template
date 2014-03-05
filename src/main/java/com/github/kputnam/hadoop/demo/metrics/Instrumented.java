@@ -61,11 +61,11 @@ public class Instrumented extends Configured implements Tool {
 
     // Type params: input key, input value, output key, output value
     public static class mapper extends InstrumentedMapper<LongWritable, Text, Text, IntWritable> {
+        com.codahale.metrics.Meter     mMeter = Metrics.meter("wc.meter");
+        com.codahale.metrics.Histogram mHisto = Metrics.histogram("wc.histo");
+
         private Text word = new Text("");
         private IntWritable one = new IntWritable(1);
-
-        com.codahale.metrics.Meter     mMeter = metrics.meter("wc.meter");
-        com.codahale.metrics.Histogram mHisto = metrics.histogram("wc.histo");
 
         @Override
         protected void map(LongWritable _, Text line, Context ctx)
@@ -84,8 +84,8 @@ public class Instrumented extends Configured implements Tool {
 
     //
     public static class combiner extends InstrumentedReducer<Text, IntWritable, Text, IntWritable> {
-        com.codahale.metrics.Timer     mTimer = metrics.timer("wc.timer");
-        com.codahale.metrics.Counter   mCount = metrics.counter("wc.count");
+        com.codahale.metrics.Timer   mTimer = Metrics.timer("wc.timer");
+        com.codahale.metrics.Counter mCount = Metrics.counter("wc.count");
 
         @Override
         protected void reduce(Text word, Iterable<IntWritable> counts, Context ctx)
