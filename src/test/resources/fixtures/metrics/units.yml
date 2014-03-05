@@ -1,0 +1,6 @@
+rateUnits: SECONDS
+durationUnits: HOURS
+metricPrefix: test
+graphiteHost: graphite.example.com
+graphitePort: 9999
+reportInterval: 15
