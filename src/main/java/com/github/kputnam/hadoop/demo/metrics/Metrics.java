@@ -124,6 +124,7 @@ public class Metrics {
             throw new IllegalArgumentException("Empty document: " + cfgResult.getConfigPath());
 
         cfgResult.loadFrom(cfgYaml);
+        System.out.println("Loaded metrics config: " + cfgResult);
 
         return cfgResult;
     }
