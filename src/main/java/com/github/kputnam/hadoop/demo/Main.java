@@ -1,9 +1,10 @@
 package com.github.kputnam.hadoop.demo;
 
 import com.github.kputnam.hadoop.demo.algebra.DotProduct;
-import com.github.kputnam.hadoop.demo.metrics.Instrumented;
+import com.github.kputnam.hadoop.demo.metrics.InstrumentedWordCount;
 import com.github.kputnam.hadoop.demo.words.Histogram;
 import com.github.kputnam.hadoop.demo.words.Ngrams;
+import com.github.kputnam.hadoop.demo.words.TopWords;
 import com.github.kputnam.hadoop.demo.words.WordCount;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -21,8 +22,9 @@ public class Main {
 
     static {
         tools.put("ngrams", Ngrams.class);
-        tools.put("metrics", Instrumented.class);
+        tools.put("topwords", TopWords.class);
         tools.put("wordcount", WordCount.class);
+        tools.put("wordcount-instrumented", InstrumentedWordCount.class);
         tools.put("histogram", Histogram.class);
         tools.put("dotproduct", DotProduct.class);
     }
