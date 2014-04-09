@@ -1,5 +1,6 @@
 package com.github.kputnam.hadoop.demo.implicit;
 
+import com.github.kputnam.hadoop.demo.util.EnumUtil;
 import org.apache.hadoop.io.Writable;
 
 import java.io.DataInput;
@@ -78,7 +79,7 @@ public abstract class Either<A extends Writable,
     public int hashCode() {
         return 31 * (left != null ? left.hashCode() : 0)
              + 31 * (right != null ? right.hashCode() : 0)
-                  + (variant != null ? variant.hashCode() : 0);
+                  + EnumUtil.hashCode(this.variant);
     }
 
     @Override
