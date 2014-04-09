@@ -8,10 +8,6 @@ import org.apache.hadoop.io.Text;
  * Created by kputnam on 4/9/14.
  */
 public class LongWritableText extends Pair<LongWritable, Text> {
-    public static LongWritableText of(LongWritable fst, Text snd) {
-        return new LongWritableText(fst, snd);
-    }
-
     public LongWritableText() {
         super();
     }

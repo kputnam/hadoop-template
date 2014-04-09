@@ -14,7 +14,7 @@ public class PairTest {
     @Test
     public void testFields() {
         TextLongWritable p =
-                TextLongWritable.of(new Text("A"), new LongWritable(2));
+                new TextLongWritable(new Text("A"), new LongWritable(2));
 
         Assert.assertEquals(new Text("A"), p.fst);
         Assert.assertEquals(new LongWritable(2), p.snd);
@@ -35,28 +35,28 @@ public class PairTest {
 
     @Test
     public void testCopy() throws Exception {
-        LongWritableText p = LongWritableText.of(new LongWritable(3), new Text("A"));
+        LongWritableText p = new LongWritableText(new LongWritable(3), new Text("A"));
         LongWritableText q = new LongWritableText();
         compareRoundtrip(p, q);
     }
 
     @Test
     public void testNulls() throws Exception {
-        LongWritableText p = LongWritableText.of(null, null);
+        LongWritableText p = new LongWritableText(null, null);
         LongWritableText q = new LongWritableText();
         compareRoundtrip(p, q);
     }
 
     @Test
     public void testFstNull() throws Exception {
-        LongWritableText p = LongWritableText.of(null, new Text("A"));
+        LongWritableText p = new LongWritableText(null, new Text("A"));
         LongWritableText q = new LongWritableText();
         compareRoundtrip(p, q);
     }
 
     @Test
     public void testSndNull() throws Exception {
-        LongWritableText p = LongWritableText.of(new LongWritable(3), null);
+        LongWritableText p = new LongWritableText(new LongWritable(3), null);
         LongWritableText q = new LongWritableText();
         compareRoundtrip(p, q);
     }
