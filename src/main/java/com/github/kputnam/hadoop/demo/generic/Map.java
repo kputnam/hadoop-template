@@ -9,17 +9,18 @@ import java.io.IOException;
 /**
  * Created by kputnam on 2/20/14.
  */
-public class Map<K extends Writable, V extends Writable> implements Writable {
+public class Map<K extends Writable,
+                 V extends Writable>
+        implements Writable {
+
     public java.util.Map<K, V> map;
 
-    // Metadata (serialization overhead)
-    private ClassIndex index = new ClassIndex();
-
     public Map() { }
+
     public Map(java.util.Map<K, V> map) { this.map = map; }
+
     public static <K extends Writable, V extends Writable>
         Map<K,V> of(java.util.Map<K,V> map) { return new Map(map); }
-
 
     @Override
     public void write(DataOutput out) throws IOException {
@@ -27,6 +28,8 @@ public class Map<K extends Writable, V extends Writable> implements Writable {
             return;
 
         // Build class index
+        final ClassIndex index = new ClassIndex();
+
         for (java.util.Map.Entry<K, V> entry: map.entrySet()) {
             index.addClass(entry.getKey().getClass());
             index.addClass(entry.getValue().getClass());
@@ -51,6 +54,7 @@ public class Map<K extends Writable, V extends Writable> implements Writable {
     @SuppressWarnings("unchecked")
     public void readFields(DataInput in) throws IOException {
         // Read class index
+        final ClassIndex index = new ClassIndex();
         index.readFields(in);
 
         try {
