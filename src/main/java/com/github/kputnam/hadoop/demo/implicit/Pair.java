@@ -18,7 +18,6 @@ public abstract class Pair<A extends Writable,
     public A fst;
     public B snd;
 
-    // Metadata (serialization overhead)
     private static final int NOT_NULL = 0x0;
     private static final int FST_NULL = 0x1;
     private static final int SND_NULL = 0x2;
@@ -46,6 +45,17 @@ public abstract class Pair<A extends Writable,
     }
 
     @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder();
+        b.append('(');
+        b.append(fst);
+        b.append(',');
+        b.append(snd);
+        b.append(')');
+        return b.toString();
+    }
+
+    @Override
     public void write(DataOutput out) throws IOException {
         // Indicate which fields are null
         out.writeByte((fst == null ? FST_NULL : NOT_NULL)
@@ -62,7 +72,7 @@ public abstract class Pair<A extends Writable,
         this.fst = null;
         this.snd = null;
 
-        int flags = in.readByte();
+        final byte flags = in.readByte();
 
         try {
             if ((flags & FST_NULL) == NOT_NULL) {
@@ -74,7 +84,7 @@ public abstract class Pair<A extends Writable,
                 snd = (B) getTypeParam(1).newInstance();
                 snd.readFields(in);
             }
-        } catch (Exception e) { throw new RuntimeException(e); }
+        } catch (Exception e) { throw new IOException(e); }
     }
 
     @SuppressWarnings("unchecked")

@@ -18,20 +18,20 @@ public abstract class Triple<A extends Writable,
 
     public A fst;
     public B snd;
-    public C thd;
+    public C trd;
 
     // Metadata (serialization overhead)
     private static final int NOT_NULL = 0x0;
     private static final int FST_NULL = 0x1;
     private static final int SND_NULL = 0x2;
-    private static final int THD_NULL = 0x4;
+    private static final int TRD_NULL = 0x4;
 
     public Triple() { }
 
-    public Triple(A fst, B snd, C thd) {
+    public Triple(A fst, B snd, C trd) {
         this.fst = fst;
         this.snd = snd;
-        this.thd = thd;
+        this.trd = trd;
     }
 
     @Override
@@ -42,17 +42,30 @@ public abstract class Triple<A extends Writable,
         Triple that = (Triple) o;
         return !(this.fst == null ^ that.fst == null)
             && !(this.snd == null ^ that.snd == null)
-            && !(this.thd == null ^ that.thd == null)
+            && !(this.trd == null ^ that.trd == null)
             && (this.fst == null || this.fst.equals(that.fst))
             && (this.snd == null || this.snd.equals(that.snd))
-            && (this.thd == null || this.thd.equals(that.thd));
+            && (this.trd == null || this.trd.equals(that.trd));
     }
 
     @Override
     public int hashCode() {
         return 31 * (fst != null ? fst.hashCode() : 0)
              + 31 * (snd != null ? snd.hashCode() : 0)
-                  + (thd != null ? thd.hashCode() : 0);
+                  + (trd != null ? trd.hashCode() : 0);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder();
+        b.append('(');
+        b.append(fst);
+        b.append(',');
+        b.append(snd);
+        b.append(',');
+        b.append(trd);
+        b.append(')');
+        return b.toString();
     }
 
     @Override
@@ -60,12 +73,12 @@ public abstract class Triple<A extends Writable,
         // Indicate which fields are null
         out.writeByte((fst == null ? FST_NULL : NOT_NULL)
                      |(snd == null ? SND_NULL : NOT_NULL)
-                     |(thd == null ? THD_NULL : NOT_NULL));
+                     |(trd == null ? TRD_NULL : NOT_NULL));
 
         // Serialize each non-null field
         if (fst != null) fst.write(out);
         if (snd != null) snd.write(out);
-        if (thd != null) thd.write(out);
+        if (trd != null) trd.write(out);
     }
 
     @Override
@@ -73,7 +86,7 @@ public abstract class Triple<A extends Writable,
     public void readFields(DataInput in) throws IOException {
         fst = null;
         snd = null;
-        thd = null;
+        trd = null;
 
         int flags = in.readByte();
 
@@ -88,9 +101,9 @@ public abstract class Triple<A extends Writable,
                 snd.readFields(in);
             }
 
-            if ((flags & THD_NULL) == NOT_NULL) {
-                thd = (C) getTypeParam(2).newInstance();
-                thd.readFields(in);
+            if ((flags & TRD_NULL) == NOT_NULL) {
+                trd = (C) getTypeParam(2).newInstance();
+                trd.readFields(in);
             }
         } catch (Exception e) { throw new RuntimeException(e); }
     }

@@ -21,6 +21,21 @@ public abstract class Set<A extends Writable>
     public Set(java.util.Set<A> set) { this.set = set; }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Set that = (Set) o;
+        return !(this.set == null ^ that.set == null)
+            && !(this.set == null || this.set.equals(that.set));
+    }
+
+    @Override
+    public int hashCode() {
+        return set != null ? set.hashCode() : 0;
+    }
+
+    @Override
     public void write(DataOutput out) throws IOException {
         out.writeInt(set.size());
 
