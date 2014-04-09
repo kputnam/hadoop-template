@@ -79,40 +79,26 @@ public abstract class Triple<A extends Writable,
 
         try {
             if ((flags & FST_NULL) == NOT_NULL) {
-                fst = (A) getClassA().newInstance();
+                fst = (A) getTypeParam(0).newInstance();
                 fst.readFields(in);
             }
 
             if ((flags & SND_NULL) == NOT_NULL) {
-                snd = (B) getClassB().newInstance();
+                snd = (B) getTypeParam(1).newInstance();
                 snd.readFields(in);
             }
 
             if ((flags & THD_NULL) == NOT_NULL) {
-                thd = (C) getClassC().newInstance();
+                thd = (C) getTypeParam(2).newInstance();
                 thd.readFields(in);
             }
         } catch (Exception e) { throw new RuntimeException(e); }
     }
 
     @SuppressWarnings("unchecked")
-    private Class<A> getClassA() {
+    private Class<?> getTypeParam(int n) {
         Type klass = getClass().getGenericSuperclass();
-        Type param = ((ParameterizedType) klass).getActualTypeArguments()[0];
-        return (Class<A>) param;
-    }
-
-    @SuppressWarnings("unchecked")
-    private Class<B> getClassB() {
-        Type klass = getClass().getGenericSuperclass();
-        Type param = ((ParameterizedType) klass).getActualTypeArguments()[1];
-        return (Class<B>) param;
-    }
-
-    @SuppressWarnings("unchecked")
-    private Class<B> getClassC() {
-        Type klass = getClass().getGenericSuperclass();
-        Type param = ((ParameterizedType) klass).getActualTypeArguments()[2];
-        return (Class<B>) param;
+        Type param = ((ParameterizedType) klass).getActualTypeArguments()[n];
+        return (Class<?>) param;
     }
 }

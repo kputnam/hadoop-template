@@ -35,7 +35,7 @@ public abstract class Set<A extends Writable>
             set = (java.util.Set<A>) getSetClass().newInstance();
 
             for (int count = in.readInt(); count > 0; count --) {
-                A element = (A) getClassA().newInstance();
+                A element = (A) getTypeParam(0).newInstance();
                 element.readFields(in);
 
                 set.add(element);
@@ -46,9 +46,9 @@ public abstract class Set<A extends Writable>
     protected abstract Class<Set<A>> getSetClass();
 
     @SuppressWarnings("unchecked")
-    private Class<A> getClassA() {
+    private Class<?> getTypeParam(int n) {
         Type klass = getClass().getGenericSuperclass();
-        Type param = ((ParameterizedType) klass).getActualTypeArguments()[0];
-        return (Class<A>) param;
+        Type param = ((ParameterizedType) klass).getActualTypeArguments()[n];
+        return (Class<?>) param;
     }
 }

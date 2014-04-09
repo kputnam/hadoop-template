@@ -38,10 +38,10 @@ public abstract class Map<K extends Writable,
             map = (java.util.Map<K, V>) getMapClass().newInstance();
 
             for (int count = in.readInt(); count > 0; count --) {
-                K key = (K) getClassK().newInstance();
+                K key = (K) getTypeParam(0).newInstance();
                 key.readFields(in);
 
-                V val = (V) getClassV().newInstance();
+                V val = (V) getTypeParam(1).newInstance();
                 val.readFields(in);
 
                 map.put(key, val);
@@ -52,16 +52,9 @@ public abstract class Map<K extends Writable,
     protected abstract Class<Map<K,V>> getMapClass();
 
     @SuppressWarnings("unchecked")
-    private Class<K> getClassK() {
+    private Class<?> getTypeParam(int n) {
         Type klass = getClass().getGenericSuperclass();
-        Type param = ((ParameterizedType) klass).getActualTypeArguments()[0];
-        return (Class<K>) param;
-    }
-
-    @SuppressWarnings("unchecked")
-    private Class<V> getClassV() {
-        Type klass = getClass().getGenericSuperclass();
-        Type param = ((ParameterizedType) klass).getActualTypeArguments()[1];
-        return (Class<V>) param;
+        Type param = ((ParameterizedType) klass).getActualTypeArguments()[n];
+        return (Class<?>) param;
     }
 }
