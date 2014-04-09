@@ -22,6 +22,21 @@ public abstract class Map<K extends Writable,
     public Map(java.util.Map<K, V> map) { this.map = map; }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Map that = (Map) o;
+        return !(this.map == null ^ that.map == null)
+            && !(this.map == null || this.map.equals(that.map));
+    }
+
+    @Override
+    public int hashCode() {
+        return map != null ? map.hashCode() : 0;
+    }
+
+    @Override
     public void write(DataOutput out) throws IOException {
         out.writeInt(map.size());
 
