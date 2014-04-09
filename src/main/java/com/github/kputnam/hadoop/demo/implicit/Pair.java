@@ -1,16 +1,18 @@
-package com.github.kputnam.hadoop.demo.generic;
+package com.github.kputnam.hadoop.demo.implicit;
 
 import org.apache.hadoop.io.Writable;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 
 /**
  * Created by kputnam on 2/20/14.
  */
-public class Pair<A extends Writable,
-                  B extends Writable>
+public abstract class Pair<A extends Writable,
+                           B extends Writable>
     implements Writable {
 
     public A fst;
@@ -24,9 +26,6 @@ public class Pair<A extends Writable,
     public Pair() { }
 
     public Pair(A fst, B snd) { this.fst = fst; this.snd = snd; }
-
-    public static <A extends Writable, B extends Writable>
-        Pair<A, B> of(A fst, B snd) { return new Pair<A, B>(fst, snd); }
 
     @Override
     public boolean equals(Object o) {
@@ -48,20 +47,13 @@ public class Pair<A extends Writable,
 
     @Override
     public void write(DataOutput out) throws IOException {
-        // Serialize class names of each non-null field
-        final ClassIndex index = new ClassIndex();
-
-        if (fst != null) index.addClass(fst.getClass());
-        if (snd != null) index.addClass(snd.getClass());
-        index.write(out);
-
         // Indicate which fields are null
         out.writeByte((fst == null ? FST_NULL : NOT_NULL)
                      |(snd == null ? SND_NULL : NOT_NULL));
 
         // Serialize each non-null field
-        if (fst != null) { out.writeByte(index.getId(fst.getClass())); fst.write(out); }
-        if (snd != null) { out.writeByte(index.getId(snd.getClass())); snd.write(out); }
+        if (fst != null) fst.write(out);
+        if (snd != null) snd.write(out);
     }
 
     @Override
@@ -70,21 +62,32 @@ public class Pair<A extends Writable,
         this.fst = null;
         this.snd = null;
 
-        final ClassIndex index = new ClassIndex();
-        index.readFields(in);
-
         int flags = in.readByte();
 
         try {
             if ((flags & FST_NULL) == NOT_NULL) {
-                fst = (A) index.getClass(in.readByte()).newInstance();
+                fst = (A) getClassA().newInstance();
                 fst.readFields(in);
             }
 
             if ((flags & SND_NULL) == NOT_NULL) {
-                snd = (B) index.getClass(in.readByte()).newInstance();
+                snd = (B) getClassB().newInstance();
                 snd.readFields(in);
             }
         } catch (Exception e) { throw new RuntimeException(e); }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Class<A> getClassA() {
+        Type klass = getClass().getGenericSuperclass();
+        Type param = ((ParameterizedType) klass).getActualTypeArguments()[0];
+        return (Class<A>) param;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Class<B> getClassB() {
+        Type klass = getClass().getGenericSuperclass();
+        Type param = ((ParameterizedType) klass).getActualTypeArguments()[1];
+        return (Class<B>) param;
     }
 }
