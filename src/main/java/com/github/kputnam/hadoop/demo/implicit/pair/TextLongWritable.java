@@ -1,6 +1,7 @@
 package com.github.kputnam.hadoop.demo.implicit.pair;
 
 import com.github.kputnam.hadoop.demo.implicit.Pair;
+import com.github.kputnam.hadoop.demo.implicit.comparators.PairComparator;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
@@ -8,6 +9,10 @@ import org.apache.hadoop.io.Text;
  * Created by kputnam on 4/9/14.
  */
 public class TextLongWritable extends Pair<Text, LongWritable> {
+    public static class Comparator extends PairComparator<Text, LongWritable> {
+
+    }
+
     public TextLongWritable() {
         super();
     }
