@@ -1,4 +1,4 @@
-metricPrefix: demo
+metricPrefix: template
 graphiteHost: localhost
 graphitePort: 2023
 reportInterval: 15
